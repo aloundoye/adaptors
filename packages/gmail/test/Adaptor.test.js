@@ -1,9 +1,15 @@
 import { expect } from 'chai';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { inspect } from 'node:util';
 import { google } from 'googleapis';
+import { serializeError } from 'serialize-error';
 import xlsx from 'xlsx';
-import { getContentsFromMessages, sendMessage } from '../src/Adaptor.js';
+import {
+  execute,
+  getContentsFromMessages,
+  sendMessage,
+} from '../src/Adaptor.js';
 import { createConnection, removeConnection } from '../src/Utils.js';
 
 const state = {
@@ -11,6 +17,14 @@ const state = {
     access_token: 'mock-access-token',
   },
 };
+const sentinel = 'sentinel-google-credential-1706';
+
+const assertSecretAbsent = error => {
+  expect(error.message).not.to.include(sentinel);
+  expect(inspect(error, { depth: null })).not.to.include(sentinel);
+  expect(JSON.stringify(serializeError(error))).not.to.include(sentinel);
+};
+
 describe('sendMessage', () => {
   let originalGmail;
   let mockGmail;
@@ -84,6 +98,26 @@ describe('sendMessage', () => {
     } catch (error) {
       expect(error.message).to.include('Required parameter');
     }
+  });
+
+  it('does not expose credentials from client errors', async () => {
+    mockGmail.users.messages.send = async () => {
+      const error = new Error(`Authorization: Bearer ${sentinel}`);
+      error.config = { headers: { Authorization: `Bearer ${sentinel}` } };
+      throw error;
+    };
+
+    const error = await execute(
+      sendMessage({
+        to: 'test@example.com',
+        subject: 'Test Subject',
+        body: 'Test Body',
+      }),
+    )({ configuration: { access_token: sentinel } }).catch(error => error);
+
+    expect(error.message).to.include('Error sending message');
+    expect(error).not.to.have.property('config');
+    assertSecretAbsent(error);
   });
 });
 

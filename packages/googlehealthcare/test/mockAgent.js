@@ -59,4 +59,20 @@ mockPool
     code: 401,
   });
 
+mockPool
+  .intercept({
+    path: '/v1/projects/test-007/locations/us-east7/datasets/fhir-007/fhirStores/testing-fhir-007/fhir/CredentialLeak',
+    method: 'POST',
+    headers: {
+      'content-type': 'application/fhir+json',
+      Authorization: 'Bearer sentinel-google-credential-1706',
+    },
+  })
+  .reply(500, {
+    message:
+      'Authorization: Bearer sentinel-google-credential-1706 must not escape',
+    status: 'error',
+    code: 500,
+  });
+
 export default mockAgent;

@@ -5,6 +5,7 @@ import {
 import {
   normalizeOauthConfig,
   expandReferences,
+  sanitizeError,
 } from '@openfn/language-common/util';
 
 import { google } from 'googleapis';
@@ -59,6 +60,7 @@ export function execute(...operations) {
   // why not here?
 
   return state => {
+    const configuration = normalizeOauthConfig(state.configuration);
     // Note: we no longer need `steps` anymore since `commonExecute`
     // takes each operation as an argument.
     return commonExecute(
@@ -68,7 +70,12 @@ export function execute(...operations) {
     )({
       ...initialState,
       ...state,
-      configuration: normalizeOauthConfig(state.configuration),
+      configuration,
+    }).catch(error => {
+      throw sanitizeError(error, [
+        configuration.access_token,
+        configuration.accessToken,
+      ]);
     });
   };
 }

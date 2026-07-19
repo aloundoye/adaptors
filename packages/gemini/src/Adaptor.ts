@@ -1,4 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
+// @ts-ignore language-common utility declarations are generated at build time
+import { sanitizeError } from '@openfn/language-common/util';
 import { composeNextState, commonExecute, expandReferences } from './Utils';
 
 /**
@@ -78,6 +80,8 @@ export function execute(...operations: any[]) {
     return (commonExecute(createClient, ...operations) as any)({
       ...initialState,
       ...state,
+    }).catch((error: unknown) => {
+      throw sanitizeError(error, state.configuration?.apiKey);
     });
   };
 }

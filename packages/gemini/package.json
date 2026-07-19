@@ -1,6 +1,6 @@
 {
   "name": "@openfn/language-gemini",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "OpenFn gemini adaptor",
   "type": "module",
   "exports": {
@@ -13,8 +13,8 @@
   },
   "scripts": {
     "build": "pnpm clean && build-adaptor gemini",
-    "_test": "mocha --experimental-specifier-resolution=node --no-warnings",
-    "_test:watch": "mocha -w --experimental-specifier-resolution=node --no-warnings",
+    "test": "TS_NODE_TRANSPILE_ONLY=true mocha --experimental-specifier-resolution=node --no-warnings --loader=ts-node/esm test/**/*.test.ts",
+    "test:watch": "TS_NODE_TRANSPILE_ONLY=true mocha -w --experimental-specifier-resolution=node --no-warnings --loader=ts-node/esm test/**/*.test.ts",
     "clean": "rimraf dist types docs",
     "pack": "pnpm pack --pack-destination ../../dist"
   },
@@ -35,7 +35,10 @@
     "chai": "4.3.6",
     "deep-eql": "4.1.1",
     "mocha": "^10.7.3",
-    "rimraf": "3.0.2"
+    "rimraf": "3.0.2",
+    "ts-node": "10.9.1",
+    "typescript": "5.9.2",
+    "undici": "^7.28.0"
   },
   "repository": {
     "type": "git",

@@ -1,5 +1,14 @@
 # @openfn/language-gmail
 
+## 3.0.1 - 17 July 2026
+
+### Patch Changes
+
+- [#1706](https://github.com/OpenFn/adaptors/issues/1706): Sanitize
+  credential-bearing client errors before propagation.
+- Updated dependencies
+  - @openfn/language-common@3.4.0
+
 ## 3.0.0 - 08 July 2026
 
 ### Major Changes

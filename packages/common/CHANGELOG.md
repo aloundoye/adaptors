@@ -1,3 +1,11 @@
+## 3.4.0 - 17 July 2026
+
+### Minor Changes
+
+- [#1706](https://github.com/OpenFn/adaptors/issues/1706): Add `sanitizeError()`
+  for removing credentials and transport metadata from errors at adaptor
+  boundaries.
+
 ## 3.0.1 - 11 July 2025
 
 ## 3.3.4 - 30 June 2026

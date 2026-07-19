@@ -1,7 +1,17 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { google } from 'googleapis';
+import { inspect } from 'node:util';
+import { serializeError } from 'serialize-error';
 import { execute, create, get, update, list } from '../src/index.js';
+
+const sentinel = 'sentinel-google-credential-1706';
+
+const assertSecretAbsent = error => {
+  expect(error.message).not.to.include(sentinel);
+  expect(inspect(error, { depth: null })).not.to.include(sentinel);
+  expect(JSON.stringify(serializeError(error))).not.to.include(sentinel);
+};
 
 describe('Google Drive Adaptor', () => {
   let sandbox;
@@ -148,6 +158,23 @@ describe('Google Drive Adaptor', () => {
       } catch (error) {
         expect(error.message).to.include('folderId is required');
       }
+    });
+
+    it('does not expose credentials from client errors', async () => {
+      const clientError = new Error('Google Drive request failed');
+      clientError.status = 503;
+      clientError.response = {
+        request: { headers: { authorization: `Bearer ${sentinel}` } },
+      };
+      mockFiles.list.rejects(clientError);
+
+      const error = await execute(list('folder123'))({
+        configuration: { access_token: sentinel },
+      }).catch(error => error);
+
+      expect(error.status).to.equal(503);
+      expect(error).not.to.have.property('response');
+      assertSecretAbsent(error);
     });
   });
 });

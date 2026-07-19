@@ -1,10 +1,20 @@
 import { expect } from 'chai';
+import { inspect } from 'node:util';
+import { serializeError } from 'serialize-error';
 import { execute, createFhirResource } from '../src/Adaptor.js';
 
 import MockAgent from './mockAgent.js';
 import { setGlobalDispatcher } from 'undici';
 
 setGlobalDispatcher(MockAgent);
+
+const sentinel = 'sentinel-google-credential-1706';
+
+const assertSecretAbsent = error => {
+  expect(error.message).not.to.include(sentinel);
+  expect(inspect(error, { depth: null })).not.to.include(sentinel);
+  expect(JSON.stringify(serializeError(error))).not.to.include(sentinel);
+};
 
 describe('execute', () => {
   it('executes each operation in sequence', done => {
@@ -168,5 +178,24 @@ describe('createFhirResource', () => {
     expect(error.message).to.contains(
       'Missing key(s) in fhirStore: cloudRegion, projectId, datasetId, fhirStoreId'
     );
+  });
+
+  it('does not expose credentials from API errors', async () => {
+    const error = await execute(
+      createFhirResource(
+        {
+          cloudRegion: 'us-east7',
+          projectId: 'test-007',
+          datasetId: 'fhir-007',
+          fhirStoreId: 'testing-fhir-007',
+        },
+        {
+          resourceType: 'CredentialLeak',
+        },
+      ),
+    )({ configuration: { accessToken: sentinel } }).catch(error => error);
+
+    expect(error.message).to.include('Status: 500');
+    assertSecretAbsent(error);
   });
 });

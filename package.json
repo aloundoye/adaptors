@@ -43,6 +43,7 @@
     "globals": "^17.2.0",
     "lodash": "^4.18.1",
     "mocha": "^10.8.2",
+    "serialize-error": "7.0.1",
     "tsx": "^4.19.2",
     "typescript": "4.8.4"
   },

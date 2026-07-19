@@ -1,5 +1,6 @@
 import 'regenerator-runtime/runtime.js';
 import { execute as commonExecute } from '@openfn/language-common';
+import { sanitizeError } from '@openfn/language-common/util';
 import fs from 'fs';
 import { BigQuery } from '@google-cloud/bigquery';
 
@@ -22,7 +23,24 @@ export function execute(...operations) {
   };
 
   return state => {
-    return commonExecute(...operations)({ ...initialState, ...state });
+    const configuration = state.configuration ?? {};
+    const secrets = [
+      configuration.access_token,
+      configuration.accessToken,
+      configuration.private_key,
+      configuration.privateKey,
+      configuration.private_key_id,
+      configuration.privateKeyId,
+      configuration.client_secret,
+      configuration.clientSecret,
+      configuration.password,
+    ];
+
+    return commonExecute(...operations)({ ...initialState, ...state }).catch(
+      error => {
+        throw sanitizeError(error, secrets);
+      },
+    );
   };
 }
 

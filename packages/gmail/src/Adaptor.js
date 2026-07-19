@@ -6,6 +6,7 @@ import {
 import {
   normalizeOauthConfig,
   expandReferences,
+  sanitizeError,
 } from '@openfn/language-common/util';
 
 import {
@@ -216,6 +217,7 @@ export function execute(...operations) {
   };
 
   return state => {
+    const configuration = normalizeOauthConfig(state.configuration);
     return commonExecute(
       createConnection,
       ...operations,
@@ -223,7 +225,12 @@ export function execute(...operations) {
     )({
       ...initialState,
       ...state,
-      configuration: normalizeOauthConfig(state.configuration),
+      configuration,
+    }).catch(error => {
+      throw sanitizeError(error, [
+        configuration.access_token,
+        configuration.accessToken,
+      ]);
     });
   };
 }

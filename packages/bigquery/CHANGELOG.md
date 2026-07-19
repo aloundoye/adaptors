@@ -1,5 +1,15 @@
 # @openfn/language-bigquery
 
+## 4.1.3 - 17 July 2026
+
+### Patch Changes
+
+- [#1706](https://github.com/OpenFn/adaptors/issues/1706): Sanitize
+  credential-bearing client errors before propagation and update
+  `@google-cloud/bigquery` to 8.3.1.
+- Updated dependencies
+  - @openfn/language-common@3.4.0
+
 ## 4.1.2 - 30 June 2026
 
 ### Patch Changes

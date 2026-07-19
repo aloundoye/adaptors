@@ -1,8 +1,18 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { google } from 'googleapis';
+import { inspect } from 'node:util';
+import { serializeError } from 'serialize-error';
 
 import { execute, appendValues, batchUpdateValues, getValues } from '../src/index.js';
+
+const sentinel = 'sentinel-google-credential-1706';
+
+const assertSecretAbsent = error => {
+  expect(error.message).not.to.include(sentinel);
+  expect(inspect(error, { depth: null })).not.to.include(sentinel);
+  expect(JSON.stringify(serializeError(error))).not.to.include(sentinel);
+};
 
 describe('appendValues', () => {
   let sandbox;
@@ -136,5 +146,22 @@ describe('getValues', () => {
     expect(callArgs.spreadsheetId).to.equal('123-456-789');
     expect(callArgs.range).to.equal('Sheet1!A1:B2');
     expect(result.data).to.deep.equal({ values: [['a', 'b'], ['c', 'd']] });
+  });
+
+  it('does not expose credentials from client errors', async () => {
+    const clientError = new Error('Google Sheets request failed');
+    clientError.code = 'ERR_STREAM_PREMATURE_CLOSE';
+    clientError.config = {
+      headers: { Authorization: `Bearer ${sentinel}` },
+    };
+    mockGet.rejects(clientError);
+
+    const error = await execute(getValues('123-456-789', 'Sheet1!A1:B2'))({
+      configuration: { access_token: sentinel },
+    }).catch(error => error);
+
+    expect(error.code).to.equal('ERR_STREAM_PREMATURE_CLOSE');
+    expect(error).not.to.have.property('config');
+    assertSecretAbsent(error);
   });
 });
